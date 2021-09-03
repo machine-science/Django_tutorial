@@ -1,7 +1,8 @@
 from django.http import response
-from django.http.response import HttpResponseNotFound, HttpResponseRedirect
+from django.http.response import Http404, HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import render
 from django.http import HttpResponse
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.template.loader import render_to_string
 
@@ -19,22 +20,16 @@ monthly_challenges = {
     "september": "september challenge",
     "october": "october challenge",
     "november": "november challenge",
-    "december": "december challenge",
+    "december": None,
 
 }
 
 
 def index(request):
-    list_items = ''
+
     months = list(monthly_challenges.keys())
 
-    for month in months:
-        capital_month = month.capitalize()
-        month_path = reverse("month-challenge", args=[month])
-        list_items += f"<li><a href = \"{month_path}\">{capital_month}</a></li>"
-
-    response_data = f"<ul>{list_items}</ul>"
-    return HttpResponse(response_data)
+    return render(request, "challenge_app\index.html", context={"months": months})
 
 
 def monthly_challenge_by_number(request, month):
@@ -50,14 +45,24 @@ def monthly_challenge_by_number(request, month):
     # It will be taken care of automatically by reverse.
     # return HttpResponseRedirect("/challenges/"+redirect_month)
 
-    return HttpResponse(month)
+    # return HttpResponse(month)
 
 
 def monthly_challenge(request, month):
     try:
         challenge_text = monthly_challenges[month]
-        # response_data = render_to_string("challenge_app\challenge_app.html")
-        response_data = f'<h1>{challenge_text}</h1>'
-        return HttpResponse(response_data)
+
+        # Render always use to render success response
+        return render(request, "challenge_app\challenge.html",
+                      context={"text": challenge_text,
+                               "month": month})
+
+    # response_data = render_to_string("challenge_app\challenge.html")
+    # response_data = f'<h1>{challenge_text}</h1>'
+    # return HttpResponse(response_data)
     except:
-        return HttpResponseNotFound("<h1> This month is not supported!! </h1>")
+        # not_found_page = render_to_string("404.html")
+        # return HttpResponseNotFound(not_found_page)
+        # Instead of above approach Django provides us
+        # inbuilt functionality to raise 404 error
+        raise Http404
